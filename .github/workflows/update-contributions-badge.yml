@@ -1,0 +1,79 @@
+name: Update Contributions Badge
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-badge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get total contributions till now
+        id: contributions
+        env:
+          GH_TOKEN: ${{ secrets.PROFILE_STATS_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "Missing PROFILE_STATS_TOKEN secret"
+            exit 1
+          fi
+
+          YEAR=$(date -u +%Y)
+          FROM_DATE="${YEAR}-01-01T00:00:00Z"
+          TO_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          QUERY=$(cat <<'EOF'
+          query($username: String!, $from: DateTime!, $to: DateTime!) {
+            user(login: $username) {
+              contributionsCollection(from: $from, to: $to) {
+                contributionCalendar {
+                  totalContributions
+                }
+              }
+            }
+          }
+          EOF
+          )
+
+          RESPONSE=$(curl -s -X POST https://api.github.com/graphql \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "$(jq -n --arg q "$QUERY" --arg username "Mayank-2274" --arg from "$FROM_DATE" --arg to "$TO_DATE" '{query:$q,variables:{username:$username,from:$from,to:$to}}')")
+
+          TOTAL=$(echo "$RESPONSE" | jq -r '.data.user.contributionsCollection.contributionCalendar.totalContributions // empty')
+
+          if [ -z "$TOTAL" ]; then
+            echo "Could not fetch total contributions. Response:"
+            echo "$RESPONSE"
+            exit 1
+          fi
+
+          echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
+
+      - name: Generate total contributions badge
+        env:
+          TOTAL: ${{ steps.contributions.outputs.total }}
+        run: |
+          mkdir -p assets
+          BADGE_URL="https://img.shields.io/badge/Total%20Contributions-${TOTAL}-1f6feb?style=for-the-badge&logo=github&logoColor=white&labelColor=0d1117"
+          curl -sSL "$BADGE_URL" -o assets/total-contributions.svg
+
+      - name: Commit changes
+        run: |
+          if git diff --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/total-contributions.svg
+          git commit -m "chore: update total contributions badge"
+          git push
