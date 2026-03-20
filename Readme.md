@@ -37,13 +37,10 @@ I am a **Computer Science student** specializing in **Artificial Intelligence** 
 
 ---
 
-<div align="center">
-  <img src="https://github-readme-stats.vercel.app/api?username=Mayank-2274&show_icons=true&count_private=true&include_all_commits=true&hide_border=true&title_color=45A1FF&icon_color=45A1FF&text_color=1F2D3D&bg_color=ffffff" alt="GitHub stats and total contributions" />
-</div>
 
-<div align="center">
 
-  <br>
+
+
   
   <p><i>"Passionate about integrating AI agents with web applications to build scalable solutions."</i></p>
 </div>
