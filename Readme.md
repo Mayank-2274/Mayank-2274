@@ -38,9 +38,9 @@ I am a **Computer Science student** specializing in **Artificial Intelligence** 
 ---
 
 
+<div align="center">
 
-
-
+  <br>
   
   <p><i>"Passionate about integrating AI agents with web applications to build scalable solutions."</i></p>
 </div>
