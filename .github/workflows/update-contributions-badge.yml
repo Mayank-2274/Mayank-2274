@@ -18,11 +18,13 @@ jobs:
       - name: Get total contributions till now
         id: contributions
         env:
-          GH_TOKEN: ${{ secrets.PROFILE_STATS_TOKEN }}
+          PROFILE_STATS_TOKEN: ${{ secrets.PROFILE_STATS_TOKEN }}
+          GITHUB_TOKEN_FALLBACK: ${{ github.token }}
         run: |
-          if [ -z "$GH_TOKEN" ]; then
-            echo "Missing PROFILE_STATS_TOKEN secret"
-            exit 1
+          TOKEN="$PROFILE_STATS_TOKEN"
+          if [ -z "$TOKEN" ]; then
+            echo "PROFILE_STATS_TOKEN is not set; using GITHUB_TOKEN fallback (public contributions only)."
+            TOKEN="$GITHUB_TOKEN_FALLBACK"
           fi
 
           YEAR=$(date -u +%Y)
@@ -42,10 +44,17 @@ jobs:
           EOF
           )
 
-          RESPONSE=$(curl -s -X POST https://api.github.com/graphql \
-            -H "Authorization: Bearer $GH_TOKEN" \
+          RESPONSE=$(curl -fsSL -X POST https://api.github.com/graphql \
+            -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
             -d "$(jq -n --arg q "$QUERY" --arg username "Mayank-2274" --arg from "$FROM_DATE" --arg to "$TO_DATE" '{query:$q,variables:{username:$username,from:$from,to:$to}}')")
+
+          ERRORS=$(echo "$RESPONSE" | jq -r '.errors // empty')
+          if [ -n "$ERRORS" ]; then
+            echo "GitHub GraphQL returned errors:"
+            echo "$RESPONSE"
+            exit 1
+          fi
 
           TOTAL=$(echo "$RESPONSE" | jq -r '.data.user.contributionsCollection.contributionCalendar.totalContributions // empty')
 

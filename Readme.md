@@ -38,7 +38,7 @@ I am a **Computer Science student** specializing in **Artificial Intelligence** 
 ---
 
 <div align="center">
-  <img src="./assets/total-contributions.svg" alt="total contributions till date" />
+  <img src="https://raw.githubusercontent.com/Mayank-2274/Mayank-2274/master/assets/total-contributions.svg" alt="total contributions till date" />
 </div>
 
 <div align="center">
