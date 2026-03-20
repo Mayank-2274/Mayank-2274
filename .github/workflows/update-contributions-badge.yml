@@ -27,11 +27,40 @@ jobs:
             TOKEN="$GITHUB_TOKEN_FALLBACK"
           fi
 
-          YEAR=$(date -u +%Y)
-          FROM_DATE="${YEAR}-01-01T00:00:00Z"
-          TO_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          USERNAME="Mayank-2274"
+          CURRENT_YEAR=$(date -u +%Y)
 
-          QUERY=$(cat <<'EOF'
+          YEARS_QUERY=$(cat <<'EOF'
+          query($username: String!) {
+            user(login: $username) {
+              contributionsCollection {
+                contributionYears
+              }
+            }
+          }
+          EOF
+          )
+
+          YEARS_RESPONSE=$(curl -fsSL -X POST https://api.github.com/graphql \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "$(jq -n --arg q "$YEARS_QUERY" --arg username "$USERNAME" '{query:$q,variables:{username:$username}}')")
+
+          YEARS_ERRORS=$(echo "$YEARS_RESPONSE" | jq -r '.errors // empty')
+          if [ -n "$YEARS_ERRORS" ]; then
+            echo "GitHub GraphQL returned errors while fetching contribution years:"
+            echo "$YEARS_RESPONSE"
+            exit 1
+          fi
+
+          YEARS=$(echo "$YEARS_RESPONSE" | jq -r '.data.user.contributionsCollection.contributionYears[]?')
+          if [ -z "$YEARS" ]; then
+            echo "Could not fetch contribution years. Response:"
+            echo "$YEARS_RESPONSE"
+            exit 1
+          fi
+
+          RANGE_QUERY=$(cat <<'EOF'
           query($username: String!, $from: DateTime!, $to: DateTime!) {
             user(login: $username) {
               contributionsCollection(from: $from, to: $to) {
@@ -44,27 +73,32 @@ jobs:
           EOF
           )
 
-          RESPONSE=$(curl -fsSL -X POST https://api.github.com/graphql \
-            -H "Authorization: Bearer $TOKEN" \
-            -H "Content-Type: application/json" \
-            -d "$(jq -n --arg q "$QUERY" --arg username "Mayank-2274" --arg from "$FROM_DATE" --arg to "$TO_DATE" '{query:$q,variables:{username:$username,from:$from,to:$to}}')")
+          TOTAL_ALL=0
+          for YEAR in $YEARS; do
+            FROM_DATE="${YEAR}-01-01T00:00:00Z"
+            if [ "$YEAR" = "$CURRENT_YEAR" ]; then
+              TO_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+            else
+              TO_DATE="${YEAR}-12-31T23:59:59Z"
+            fi
 
-          ERRORS=$(echo "$RESPONSE" | jq -r '.errors // empty')
-          if [ -n "$ERRORS" ]; then
-            echo "GitHub GraphQL returned errors:"
-            echo "$RESPONSE"
-            exit 1
-          fi
+            RANGE_RESPONSE=$(curl -fsSL -X POST https://api.github.com/graphql \
+              -H "Authorization: Bearer $TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "$(jq -n --arg q "$RANGE_QUERY" --arg username "$USERNAME" --arg from "$FROM_DATE" --arg to "$TO_DATE" '{query:$q,variables:{username:$username,from:$from,to:$to}}')")
 
-          TOTAL=$(echo "$RESPONSE" | jq -r '.data.user.contributionsCollection.contributionCalendar.totalContributions // empty')
+            RANGE_ERRORS=$(echo "$RANGE_RESPONSE" | jq -r '.errors // empty')
+            if [ -n "$RANGE_ERRORS" ]; then
+              echo "GitHub GraphQL returned errors for year $YEAR:"
+              echo "$RANGE_RESPONSE"
+              exit 1
+            fi
 
-          if [ -z "$TOTAL" ]; then
-            echo "Could not fetch total contributions. Response:"
-            echo "$RESPONSE"
-            exit 1
-          fi
+            YEAR_TOTAL=$(echo "$RANGE_RESPONSE" | jq -r '.data.user.contributionsCollection.contributionCalendar.totalContributions // 0')
+            TOTAL_ALL=$((TOTAL_ALL + YEAR_TOTAL))
+          done
 
-          echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
+          echo "total=$TOTAL_ALL" >> "$GITHUB_OUTPUT"
 
       - name: Generate total contributions badge
         env:
