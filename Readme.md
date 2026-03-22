@@ -2,20 +2,20 @@
   
   <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&pause=1000&color=45A1FF&center=true&vCenter=true&width=435&lines=Hi+there!+I'm+Mayank;Full+Stack+Developer+&+AI+Engineer;Building+the+Future" alt="Typing SVG" />
 
-  <h1>🚀 Full Stack & AI Developer</h1>
+  <h1>😎Full Stack & AI Developer</h1>
 
   <p>
     <a href="https://mayankmacos.tech"><b>Portfolio</b></a> •
     <a href="mailto:mayank.d.malviya@gmail.com"><b>Email</b></a> •
     <a href="https://linkedin.com/in/mayank-22-malviya"><b>LinkedIn</b></a>
   </p>
-<p> Majorly working on Gitlab  </p>
+<p> Majorly working on Gitlab 🤷‍♂️</p>
  
 </div>
 
 ---
 
-###  About Me
+###  🙋‍♂️About Me
 I am a **Computer Science student** specializing in **Artificial Intelligence** with a strong foundation in building scalable web solutions and training AI models. Based in **Bengaluru**, I have a proven track record in hackathons and end-to-end project development.
 
 -  Pursuing B.E. in CS with AI at **DSATN**.
