@@ -5,7 +5,7 @@
   <h1>😎Full Stack & AI Developer</h1>
 
   <p>
-    <a href="https://mayankmacos.tech"><b>Portfolio</b></a> •
+    <a href="https://mayankmacos.netlify.app/"><b>Portfolio</b></a> •
     <a href="mailto:mayank.d.malviya@gmail.com"><b>Email</b></a> •
     <a href="https://linkedin.com/in/mayank-22-malviya"><b>LinkedIn</b></a>
   </p>
